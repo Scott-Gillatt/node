@@ -3,7 +3,7 @@ var app = express();
 
 var bodyParser = require('body-parser');
 var accountRouter = require('./routes/account');
-var todoRouter = require('./routes/todo');
+var todoRouter = require('./routes/todos');
 
 app.set('view engine', 'ejs');
 

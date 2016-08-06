@@ -1,83 +1,86 @@
 var router = require('express').Router();
+
+loki = require('lokijs');
 var db = new loki('todos.json');
 
-var todos = db.addCollectoin('children');
+var todos = db.addCollection('todos');
 
-var todos = [];
+router.route('/')
+    .post(function (req, res, next) {
 
-router.route('/add')
-	.post(function (req, res, next) {
+        if (req.body.task) {
 
-		if (req.body.task) {
-			todos.push(req.body.task);
-			res.send(todos);
-		}
-		else {
-			throw new Error('A task is required!');
-		}
+            todos.insert({
+                task: req.body.task,
+                done: false
+            })
 
-	});
+            res.send(db.getCollection('todos'));
+        }
+        else {
+            throw new Error('A task is required!');
+        }
+
+    });
 
 router.route('/:index')
-	.put(function (req, res, next) {
+    .put(function (req, res, next) {
 
-		var index = req.params.index;
+        var index = req.params.index;
 
-		if (index < todos.length || index < 0) {
-			if (req.body.task) {
 
-				todos[index] = req.body.task;
+        if (req.body.task) {
 
-				res.send(todos);
-			}
-			else {
-				throw new Error('A task is required!');
-			}
+            var todo = todos.get(req.params.index)
 
-		}
-		else {
-			throw new Error('That index does not exist!');
-		}
-	});
+            todo.done = req.body.done;
+
+            todos.update(todo);
+            // todos.update({
+            //     $loki: req.params.index,
+            //     task: req.body.task,
+            //     done: req.body.done
+            // })
+
+            res.send(db.getCollection('todos'));
+        }
+        else {
+            throw new Error('A task is required!');
+        }
+    });
 
 router.route('/:index?')
-	.get(function (req, res, next) {
+    .get(function (req, res, next) {
 
-		if (req.params.index) {
-			var index = req.params.index;
+        if (req.params.index) {
+            var index = req.params.index;
 
-			if (index < todos.length || index < 0) {
-				res.send(todos[index]);
-			}
-			else {
-				throw new Error('That index does not exist!');
-			}
-		}
-		else {
-			res.send(todos);
-		}
+            if (index < todos.length || index < 0) {
+                res.send(todos[index]);
+            }
+            else {
+                throw new Error('That index does not exist!');
+            }
+        }
+        else {
+            res.send(todos);
+        }
 
-	})
-	.delete(function (req, res, next) {
+    })
+    .delete(function (req, res, next) {
 
-		if (req.params.index) {
-			var index = req.params.index;
+        if (req.params.index) {
+            var todo = todos.get(req.params.index);
 
-			if (index < todos.length || index < 0) {
+            todos.remove(todo);
 
-				todos.splice(index, 1);
+            res.send(db.getCollection('todos'));
+        }
+        else {
+            throw new Error('An index is required!');
+        }
 
-				res.send(todos);
-			}
-			else {
-				throw new Error('That index does not exist!');
-			}
-		}
-		else {
-			throw new Error('An index is required!');
-		}
-
-	});
+    });
 
 // router.use(function (err, req, res, next) {
 //     console.log('Error: ', err);
